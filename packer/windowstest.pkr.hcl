@@ -24,11 +24,11 @@ source "azure-arm" "windows_2022" {
   azure_tags = {
     created_by = "packer"
   }
-  
-  shared_image_gallery_name   = "CitrixImages"
-  shared_image_name           = "packertest"
-  shared_image_version        = "1.0.0"  # Version des Images in SIG
-
+  shared_image_gallery_destination {
+    shared_image_gallery_name   = "CitrixImages"
+    shared_image_name           = "packertest"
+    shared_image_version        = "1.0.0"  # Version des Images in SIG
+  }
   # Optional: Netzwerk oder weitere Einstellungen
 }
 
