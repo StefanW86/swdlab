@@ -6,7 +6,7 @@ jobs:
     steps:
 
     - name: Checkout code
-      uses: actions/checkout@main
+      uses: actions/checkout@v5
 
     - name: Log into Azure
       uses: azure/login@v2
