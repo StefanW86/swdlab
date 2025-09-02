@@ -57,7 +57,7 @@ build {
 
   provisioner "shell" {
     inline = [
-      "$env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /quiet /quit"
+      "c:\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /quiet /quit"
     ]
   }
 }
