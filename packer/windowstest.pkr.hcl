@@ -8,13 +8,13 @@ packer {
 }
 
 source "azure-arm" "windows_2022" {
-  build_resource_group_name          = "rg-bicep-test"
+  #build_resource_group_name          = "rg-bicep-test"
   virtual_network_name              = "vnet-northeurope"
   virtual_network_subnet_name       = "snet-northeurope-1"
   virtual_network_resource_group_name = "rg-homelab-north"
   
   managed_image_name            = "myManagedImage"
-  #location                     = "northeurope"
+  location                     = "northeurope"
   vm_size                      = "Standard_D2s_v3"
   os_type                      = "Windows"
   image_publisher              = "MicrosoftWindowsServer"
