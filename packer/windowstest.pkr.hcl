@@ -8,7 +8,7 @@ packer {
 }
 
 source "azure-arm" "windows_2022" {
-  build_resource_group_name          = "rg-bicep-test"
+  #build_resource_group_name          = "rg-bicep-test"
   virtual_network_name              = "vnet-northeurope"
   virtual_network_subnet_name       = "snet-northeurope-1"
   virtual_network_resource_group_name = "rg-homelab-north"
