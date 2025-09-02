@@ -8,7 +8,7 @@ packer {
 }
 
 source "azure-arm" "windows_2022" {
-  
+  build_resource_group_name          = "rg-bicep-test"
   managed_image_resource_group_name = "rg-bicep-test"
   managed_image_name            = "myManagedImage"
   location                     = "northeurope"
@@ -21,13 +21,16 @@ source "azure-arm" "windows_2022" {
   communicator                 = "winrm"
   winrm_username               = "packer"
   winrm_password               = "Admin#123"
+  winrm_insecure               = true
   azure_tags = {
     created_by = "packer"
   }
   shared_image_gallery_destination {
-    shared_image_gallery_name   = "CitrixImages"
-    shared_image_name           = "packertest"
-    shared_image_version        = "1.0.0"  # Version des Images in SIG
+    subscription = "db7ae7e3-3ce9-4854-9c79-6b022bfa2fc3"
+    gallery_name   = "CitrixImages"
+    image_name           = "packertest"
+    image_version        = "1.0.0"  # Version des Images in SIG
+    resource_group = "rg-homelab"
   }
   # Optional: Netzwerk oder weitere Einstellungen
 }
