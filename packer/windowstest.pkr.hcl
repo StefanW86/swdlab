@@ -52,6 +52,6 @@ build {
 
   provisioner "file" {
     source      = "./info.txt"
-    destination = "C:\mytemp\info.txt"
+    destination = "C:/mytemp/info.txt"
   }
 }
