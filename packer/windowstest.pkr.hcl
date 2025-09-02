@@ -25,6 +25,8 @@ source "azure-arm" "windows_2022" {
   winrm_username               = "packer"
   winrm_password               = "Admin#123"
   winrm_insecure               = true
+  winrm_timeout                     = "5m"
+  winrm_use_ssl                     = true
   azure_tags = {
     created_by = "packer"
   }
