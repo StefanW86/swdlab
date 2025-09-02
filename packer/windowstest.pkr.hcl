@@ -19,8 +19,11 @@ source "azure-arm" "windows_2022" {
   os_type                      = "Windows"
   image_publisher              = "MicrosoftWindowsServer"
   image_offer                  = "WindowsServer"
-  image_sku                    = "2022-Datacenter"
+  image_sku                    = "2022-Datacenter-g2"
   image_version                = "latest"
+  security_type               = "TrustedLaunch"
+  secure_boot_enabled         = true
+  vtpm_enabled                = true
   communicator                 = "winrm"
   winrm_username               = "packer"
   winrm_password               = "Admin#123"
