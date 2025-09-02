@@ -54,4 +54,10 @@ build {
     source      = "./info.txt"
     destination = "C:/mytemp/info.txt"
   }
+
+  provisioner "shell" {
+    inline = [
+      "$env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /quiet /quit"
+    ]
+  }
 }
