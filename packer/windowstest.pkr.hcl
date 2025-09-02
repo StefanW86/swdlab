@@ -45,4 +45,13 @@ source "azure-arm" "windows_2022" {
 
 build {
   sources = ["source.azure-arm.windows_2022"]
+
+  provisioner "powershell" {
+    script = "./prep.ps1"
+  }
+
+  provisioner "file" {
+    source      = "./info.txt"
+    destination = "C:\mytemp\info.txt"
+  }
 }
