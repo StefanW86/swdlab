@@ -13,7 +13,7 @@ source "azure-arm" "windows_2022" {
   virtual_network_subnet_name       = "snet-northeurope-1"
   virtual_network_resource_group_name = "rg-homelab-north"
   
-  managed_image_name            = "myManagedImage"
+  #managed_image_name            = "myManagedImage"
   location                     = "northeurope"
   vm_size                      = "Standard_D2s_v3"
   os_type                      = "Windows"
