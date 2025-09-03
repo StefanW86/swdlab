@@ -37,7 +37,7 @@ source "azure-arm" "windows_2022" {
     subscription = "db7ae7e3-3ce9-4854-9c79-6b022bfa2fc3"
     gallery_name   = "CitrixImages"
     image_name           = "packertest"
-    image_version        = "1.0.2"  # Version des Images in SIG
+    image_version        = "1.0.3"  # Version des Images in SIG
     resource_group = "rg-homelab"
   }
   # Optional: Netzwerk oder weitere Einstellungen
