@@ -56,6 +56,12 @@ build {
   }
 
   provisioner "powershell" {
+    script = "./InstallLanguagePack.ps1"
+  }
+
+  provisioner "windows-restart" {}
+ # Sysprep VM, so von Microsoft empfohlen. 
+  provisioner "powershell" {
     inline = [
       "while ((Get-Service RdAgent).Status -ne 'Running') { Start-Sleep -s 5 }",
       "while ((Get-Service WindowsAzureGuestAgent).Status -ne 'Running') { Start-Sleep -s 5 }",
