@@ -1,6 +1,8 @@
 # Parameter
 $ipPort = "10.0.0.7:443"          # IP-Adresse und Port, auf dem SSL gebunden ist
-$certSubject = "CN=azcloudcon1.swdlab.de"  # Suchkriterium für das neue Zertifikat
+#$certSubject = "CN=azcloudcon1.swdlab.de"  # Suchkriterium für das neue Zertifikat
+$Issuer = "swdlab-TESTDC1-CA"  # Aussteller des neuen Zertifikats 
+$DnsName = "azcloudcon1.swdlab.de"   # DNS-Name für SAN-Suche (optional)
 $renewThresholdDays = 5          # Tage vor Ablauf zur Erneuerung
 
 $ErrorActionPreference = 'SilentlyContinue'
@@ -34,7 +36,7 @@ function Write-Log {
     }
 }
 
-Write-Log "---------------- Script gestartet -----------------"
+
 
 function Get-BoundSSLCertificate {
     param([string]$ipPort)
@@ -58,19 +60,65 @@ function Get-CertificateByThumbprintOrSubject {
     $store.Close()
     return $cert
 }
+function Get-CertificateBySAN {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$DnsName,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Issuer,
+
+        [ValidateSet('LocalMachine','CurrentUser')]
+        [string]$StoreLocation = 'LocalMachine',
+
+        [string]$StoreName = 'My'
+    )
+
+    $path = "Cert:\$StoreLocation\$StoreName"
+
+    # Alle Zertifikate im angegebenen Speicher , ob im SAN der DNS Name auftaucht durchgehen
+
+    $cert = Get-ChildItem -Path $path | Where-Object {
+        # SAN-Extension holen
+        $sanExt = $_.Extensions | Where-Object {
+            $_.Oid.Value -eq '2.5.29.17'    # Subject Alternative Name OID  
+        }
+
+        if (-not $sanExt) { return $false }
+
+        # SAN-Text ausgeben und auf den DNS-Namen testen
+        $sanText = $sanExt.Format($true)
+        $sanText -match "(DNS[- ]Name=)\s*$([regex]::Escape($DnsName))\b" -and
+        $_.Issuer -like "*$($Issuer)*"
+    }
+    return $cert
+}
 
 function Renew-SSLCertificateBinding {
     param([string]$ipPort, [string]$newCertThumbprint)
-    Write-Log "Entferne alte SSL-Bindung an $ipPort"
-    netsh http delete sslcert ipport=$ipPort
-    Write-Log "Binde neues Zertifikat mit Thumbprint $newCertThumbprint an $ipPort"
-    netsh http add sslcert ipport=$ipPort certhash=$newCertThumbprint appid='{00112233-4455-6677-8899-AABBCCDDEEFF}' 
+    try {
+        $bindings = netsh http show sslcert
+        if($bindings.count -gt 10) {
+            Write-Log "Entferne alte SSL-Bindung an $ipPort"
+            netsh http delete sslcert ipport=$ipPort
+ 
+        }
+        Write-Log "Binde neues Zertifikat mit Thumbprint $newCertThumbprint an $ipPort"
+        netsh http add sslcert ipport=$ipPort certhash=$newCertThumbprint appid='{00112233-4455-6677-8899-AABBCCDDEEFF}'  
+        
+    } catch {
+        Write-Log "Fehler bei der Erneuerung der SSL-Bindung: $_" -Type Error
+        exit 1
+    }
 }
+
+Write-Log "---------------- Script gestartet -----------------"
+
 
 $boundThumbprint = Get-BoundSSLCertificate $ipPort
 if (-not $boundThumbprint) {
     Write-Log "Kein SSL-Zertifikat auf $ipPort gefunden." -Type Error
-    $newCert = Get-CertificateByThumbprintOrSubject $certSubject
+    $newCert = Get-CertificateBySAN -DnsName $DnsName -Issuer $Issuer
     Renew-SSLCertificateBinding -ipPort $ipPort -newCertThumbprint $newCert.Thumbprint
     exit 0
 }
@@ -78,7 +126,7 @@ if (-not $boundThumbprint) {
 $currentCert = Get-CertificateByThumbprintOrSubject $boundThumbprint
 if (-not $currentCert) {
     Write-Log "Gebundenes Zertifikat mit Thumbprint $boundThumbprint nicht gefunden." -Type Error
-    $newCert = Get-CertificateByThumbprintOrSubject $certSubject
+    $newCert = Get-CertificateBySAN -DnsName $DnsName -Issuer $Issuer
     Renew-SSLCertificateBinding -ipPort $ipPort -newCertThumbprint $newCert.Thumbprint
     Write-Log "Nicht vorhandenes Zertifikat ersetzt."
     exit 0
@@ -89,9 +137,9 @@ Write-Log "Aktuell gebundenes Zertifikat läuft ab am: $($currentCert.NotAfter)"
 $daysLeft = ($currentCert.NotAfter - (Get-Date)).Days
 if ($daysLeft -le $renewThresholdDays) {
     Write-Log "Zertifikat läuft in $daysLeft Tagen ab. Suche neues Zertifikat..."
-    $newCert = Get-CertificateByThumbprintOrSubject $certSubject
+    $newCert = Get-CertificateBySAN -DnsName $DnsName -Issuer $Issuer
     if (-not $newCert) {
-        Write-Log "Kein neues Zertifikat mit Subject '$certSubject' gefunden." -Type Error
+        Write-Log "Kein neues Zertifikat mit SAN '$DnsName' gefunden." -Type Error
         exit 1
     }
     if ($newCert.Thumbprint -eq $boundThumbprint) {
