@@ -71,13 +71,14 @@ function Get-CertificateBySAN {
         [ValidateSet('LocalMachine','CurrentUser')]
         [string]$StoreLocation = 'LocalMachine',
 
-        [string]$StoreName = 'My'
+        [string]$StoreName = 'My',
+
+        [int]$MinValidityDays = $renewThresholdDays
     )
 
     $path = "Cert:\$StoreLocation\$StoreName"
 
-    # Alle Zertifikate im angegebenen Speicher , ob im SAN der DNS Name auftaucht durchgehen
-
+    # Alle Zertifikate im angegebenen Speicher durchgehen, SAN prüfen und Mindestgültigkeit sicherstellen
     $cert = Get-ChildItem -Path $path | Where-Object {
         # SAN-Extension holen
         $sanExt = $_.Extensions | Where-Object {
@@ -88,9 +89,11 @@ function Get-CertificateBySAN {
 
         # SAN-Text ausgeben und auf den DNS-Namen testen
         $sanText = $sanExt.Format($true)
-        $sanText -match "(DNS[- ]Name=)\s*$([regex]::Escape($DnsName))\b" -and
-        $_.Issuer -like "*$($Issuer)*"
-    }
+        ($sanText -match "(DNS[- ]Name=)\s*$([regex]::Escape($DnsName))\b") -and
+        ($_.Issuer -like "*$($Issuer)*") -and
+        ($_.NotAfter -gt (Get-Date).AddDays($MinValidityDays))
+    } | Sort-Object NotAfter -Descending | Select-Object -First 1
+
     return $cert
 }
 
